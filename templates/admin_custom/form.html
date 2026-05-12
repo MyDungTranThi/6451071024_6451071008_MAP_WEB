@@ -1,0 +1,25 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">{{ title }}</h1>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="admin-actions" style="justify-content: flex-start;">
+                <button type="submit" class="admin-btn">
+                    <span class="material-symbols-outlined md-18">save</span>
+                    Lưu
+                </button>
+                <a class="admin-btn admin-btn-secondary" href="{{ back_url|default:'/' }}">Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

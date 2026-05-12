@@ -1,0 +1,19 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">{{ title }}</h1>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        {% if item %}
+            <pre>{{ item }}</pre>
+        {% else %}
+            <div class="admin-empty">Không tìm thấy dữ liệu.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
