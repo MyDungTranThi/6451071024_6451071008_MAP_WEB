@@ -1,0 +1,73 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Đơn hàng</h1>
+        <p class="admin-page-subtitle">Theo dõi đơn hàng, khách nhận và cập nhật trạng thái xử lý.</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <form method="get" class="admin-toolbar">
+            <input type="search" name="q" value="{{ query }}" placeholder="Tìm mã đơn, tên khách, email hoặc số điện thoại...">
+            <select name="status">
+                <option value="all" {% if status == 'all' %}selected{% endif %}>Tất cả trạng thái</option>
+                {% for value in statuses %}
+                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+            <button class="admin-btn" type="submit">
+                <span class="material-symbols-outlined md-18">filter_alt</span>
+                Lọc
+            </button>
+        </form>
+
+        {% if error_message %}<p class="errornote">{{ error_message }}</p>{% endif %}
+
+        {% if orders %}
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Người nhận</th>
+                        <th style="text-align:right;">Tổng</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <strong>{{ order.orderCodeDisplay }}</strong>
+                            <br><span class="admin-muted">{{ order.createdAtDisplay }}</span>
+                        </td>
+                        <td>
+                            {% if order.userId %}
+                                <a class="admin-link" href="{% url 'admin_customer_detail' order.userId %}">{{ order.customerNameDisplay }}</a>
+                            {% else %}
+                                {{ order.customerNameDisplay }}
+                            {% endif %}
+                            {% if order.customerContactDisplay %}<br><span class="admin-muted">{{ order.customerContactDisplay }}</span>{% endif %}
+                        </td>
+                        <td>{{ order.recipientName|default:"-" }}<br><span class="admin-muted">{{ order.phoneNumber|default:"-" }}</span></td>
+                        <td style="text-align:right;"><strong>{{ order.totalDisplay }}</strong></td>
+                        <td>{{ order.paymentMethod|default:"COD" }}</td>
+                        <td><span class="admin-badge admin-badge-info">{{ order.status|default:"pending" }}</span></td>
+                        <td><a class="admin-link" href="{% url 'admin_order_detail' order.id %}">Xem/Cập nhật</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="admin-empty">Chưa có đơn hàng phù hợp.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

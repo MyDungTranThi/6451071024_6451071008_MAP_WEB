@@ -1,0 +1,231 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">
+            {% if customer %}
+                {{ customer.firstName|default:"" }} {{ customer.lastName|default:"" }}
+            {% else %}
+                Khách hàng
+            {% endif %}
+        </h1>
+        <p class="admin-page-subtitle">{% if customer %}{{ customer.id }}{% else %}Không có dữ liệu{% endif %}</p>
+    </div>
+    <div class="admin-actions">
+        {% if customer %}
+            <a class="admin-btn" href="{% url 'admin_customer_edit' customer.id %}">
+                <span class="material-symbols-outlined md-18">edit</span>
+                Sửa hồ sơ
+            </a>
+        {% endif %}
+        <a class="admin-btn admin-btn-secondary" href="{% url 'admin_customer_list' %}">
+            <span class="material-symbols-outlined md-18">arrow_back</span>
+            Danh sách
+        </a>
+    </div>
+</div>
+
+{% if error_message %}
+    <p class="errornote">{{ error_message }}</p>
+{% endif %}
+
+{% if customer %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 14px;">Hồ sơ</h2>
+        <div class="admin-detail-list">
+            <div class="admin-detail-item"><div class="admin-detail-label">Tên</div><div class="admin-detail-value">{{ customer.firstName|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Họ</div><div class="admin-detail-value">{{ customer.lastName|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Username</div><div class="admin-detail-value">{{ customer.username|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Email</div><div class="admin-detail-value">{{ customer.email|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Số điện thoại</div><div class="admin-detail-value">{{ customer.phone|default:"-" }}</div></div>
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Xác thực email</div>
+                <div class="admin-detail-value">
+                    {% if customer.emailVerified %}<span class="admin-badge admin-badge-success">Có</span>{% else %}<span class="admin-badge">Không</span>{% endif %}
+                </div>
+            </div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Giới tính</div><div class="admin-detail-value">{{ customer.gender|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Ngày sinh</div><div class="admin-detail-value">{{ customer.dateOfBirth|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Ngày tạo</div><div class="admin-detail-value">{{ customer.createdAt|default:"-" }}</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <div class="admin-stat">
+                <div class="admin-stat-label">Tổng số đơn hàng</div>
+                <div class="admin-stat-value">{{ order_summary.totalOrders }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <div class="admin-stat">
+                <div class="admin-stat-label">Tổng chi tiêu</div>
+                <div class="admin-stat-value">{{ order_summary.totalSpent }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <div class="admin-stat">
+                <div class="admin-stat-label">Giá trị đơn trung bình</div>
+                <div class="admin-stat-value">{{ order_summary.averageOrderValue }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <div class="admin-stat">
+                <div class="admin-stat-label">Lần mua gần nhất</div>
+                <div class="admin-stat-value" style="font-size: 20px;">{{ order_summary.latestPurchase }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <div class="admin-page-header" style="margin-bottom: 12px;">
+            <div>
+                <h2 class="admin-page-title" style="font-size: 18px;">Đơn hàng của khách hàng</h2>
+                <p class="admin-page-subtitle">Chỉ tổng chi tiêu và giá trị trung bình loại trừ đơn đã hủy.</p>
+            </div>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th>Số lượng sản phẩm</th>
+                        <th>Tổng tiền</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in customer_orders %}
+                        <tr>
+                            <td>
+                                <strong>{{ order.orderCodeDisplay }}</strong>
+                                <br><span class="admin-muted">{{ order.id }}</span>
+                            </td>
+                            <td>{{ order.createdAtDisplay }}</td>
+                            <td>
+                                {% if order.status == "delivered" %}
+                                    <span class="admin-badge admin-badge-success">{{ order.status }}</span>
+                                {% elif order.status == "cancelled" %}
+                                    <span class="admin-badge admin-badge-danger">{{ order.status }}</span>
+                                {% elif order.status == "shipping" or order.status == "processing" %}
+                                    <span class="admin-badge admin-badge-info">{{ order.status }}</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-warning">{{ order.status|default:"pending" }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.totalItemsDisplay }}</td>
+                            <td><strong>{{ order.totalDisplay }}</strong></td>
+                            <td><a class="admin-link" href="{% url 'admin_order_detail' order.id %}">Xem đơn</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6"><div class="admin-empty">Khách hàng này chưa có đơn hàng.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <div class="admin-page-header" style="margin-bottom: 12px;">
+            <h2 class="admin-page-title" style="font-size: 18px;">Địa chỉ</h2>
+            <a class="admin-btn" href="{% url 'admin_customer_address_create' customer.id %}">
+                <span class="material-symbols-outlined md-18">add</span>
+                Thêm địa chỉ
+            </a>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Người nhận</th>
+                        <th>Số điện thoại</th>
+                        <th>Địa chỉ</th>
+                        <th>Mặc định</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for address in addresses %}
+                        <tr>
+                            <td>{{ address.receiverName|default:"-" }}</td>
+                            <td>{{ address.phoneNumber|default:"-" }}</td>
+                            <td>{{ address.number }}, {{ address.street }}, {{ address.ward }}, {{ address.city }}</td>
+                            <td>{% if address.isDefault %}<span class="admin-badge admin-badge-success">Có</span>{% else %}<span class="admin-badge">Không</span>{% endif %}</td>
+                            <td><a class="admin-link" href="{% url 'admin_customer_address_edit' customer.id address.id %}">Sửa</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5"><div class="admin-empty">Chưa có địa chỉ.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <div class="admin-page-header" style="margin-bottom: 12px;">
+            <h2 class="admin-page-title" style="font-size: 18px;">Tài khoản ngân hàng</h2>
+            <a class="admin-btn" href="{% url 'admin_customer_bank_create' customer.id %}">
+                <span class="material-symbols-outlined md-18">add</span>
+                Thêm ngân hàng
+            </a>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Ngân hàng</th>
+                        <th>Logo</th>
+                        <th>Short name</th>
+                        <th>Số tài khoản</th>
+                        <th>Chủ tài khoản</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bank in bank_accounts %}
+                        <tr>
+                            <td>{{ bank.bankName|default:"-" }}</td>
+                            <td>
+                                {% if bank.logo %}
+                                    <a href="{{ bank.logo }}" target="_blank" rel="noopener">
+                                        <img class="admin-image-thumb" src="{{ bank.logo }}" alt="">
+                                    </a>
+                                {% else %}
+                                    <span class="admin-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ bank.shortName|default:"-" }}</td>
+                            <td>{{ bank.accountNumber|default:"-" }}</td>
+                            <td>{{ bank.accountHolderName|default:"-" }}</td>
+                            <td><a class="admin-link" href="{% url 'admin_customer_bank_edit' customer.id bank.id %}">Sửa</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6"><div class="admin-empty">Chưa có tài khoản ngân hàng.</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="admin-card"><div class="admin-empty">Không tìm thấy khách hàng.</div></div>
+{% endif %}
+{% endblock %}

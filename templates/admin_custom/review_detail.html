@@ -1,0 +1,80 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">Review {{ review.rating|default:"0" }}/5</h1>
+        <p class="admin-page-subtitle">{{ review.userLabel|default:"-" }} - {{ review.bookTitleDisplay|default:"-" }}</p>
+    </div>
+    <div class="admin-actions">
+        <a class="admin-btn admin-btn-secondary" href="{% url 'admin_review_list' %}">Danh sách</a>
+    </div>
+</div>
+
+{% if error_message %}
+    <p class="errornote">{{ error_message }}</p>
+{% endif %}
+
+{% if review %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 14px;">Nội dung review</h2>
+        <div class="admin-detail-list">
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Khách hàng</div>
+                <div class="admin-detail-value">
+                    {% if review.userId %}<a class="admin-link" href="{% url 'admin_customer_detail' review.userId %}">{{ review.userLabel }}</a>{% else %}{{ review.userLabel }}{% endif %}
+                </div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Sách</div>
+                <div class="admin-detail-value">
+                    {% if review.bookId %}<a class="admin-link" href="{% url 'admin_book_detail' review.bookId %}">{{ review.bookTitleDisplay }}</a>{% else %}{{ review.bookTitleDisplay }}{% endif %}
+                </div>
+            </div>
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Đơn hàng</div>
+                <div class="admin-detail-value">
+                    {% if review.orderId %}<a class="admin-link" href="{% url 'admin_order_detail' review.orderId %}">{{ review.orderCodeDisplay }}</a>{% else %}-{% endif %}
+                </div>
+            </div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Rating</div><div class="admin-detail-value">{{ review.rating|default:"0" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Tiêu đề</div><div class="admin-detail-value">{{ review.title|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Ngày tạo</div><div class="admin-detail-value">{{ review.createdAtDisplay }}</div></div>
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Trạng thái</div>
+                <div class="admin-detail-value">
+                    {% if review.isDeleted %}<span class="admin-badge admin-badge-warning">Đã ẩn</span>{% else %}<span class="admin-badge admin-badge-success">Hiển thị</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 14px;">
+            <div class="admin-detail-label">Comment</div>
+            <p>{{ review.comment|linebreaksbr }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 10px;">Ảnh review</h2>
+        {% if review.imageUrls %}
+            <div class="admin-image-grid">
+                {% for image in review.imageUrls %}
+                    <a href="{{ image }}" target="_blank" rel="noopener"><img src="{{ image }}" alt=""></a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="admin-empty">Không có ảnh.</div>
+        {% endif %}
+    </div>
+</div>
+
+<form method="post" action="{% url 'admin_review_toggle_deleted' review.id %}">
+    {% csrf_token %}
+    <button class="admin-btn" type="submit">{% if review.isDeleted %}Hiện review{% else %}Ẩn review{% endif %}</button>
+</form>
+{% else %}
+<div class="admin-card"><div class="admin-empty">Không tìm thấy review.</div></div>
+{% endif %}
+{% endblock %}

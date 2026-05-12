@@ -1,0 +1,106 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">{% if book.title %}{{ book.title }}{% else %}{{ book.id|default:"Sách" }}{% endif %}</h1>
+        <p class="admin-page-subtitle">{{ book.id }}</p>
+    </div>
+    <div class="admin-actions">
+        <a class="admin-btn" href="{% url 'admin_book_edit' book.id %}">
+            <span class="material-symbols-outlined md-18">edit</span>
+            Sửa
+        </a>
+        <a class="admin-btn admin-btn-secondary" href="{% url 'admin_book_list' %}">Danh sách</a>
+    </div>
+</div>
+
+{% if error_message %}
+    <p class="errornote">{{ error_message }}</p>
+{% endif %}
+
+{% if book %}
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 14px;">Thông tin chính</h2>
+        <div class="admin-detail-list">
+            <div class="admin-detail-item"><div class="admin-detail-label">Tác giả</div><div class="admin-detail-value">{{ book.author|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">NXB</div><div class="admin-detail-value">{{ book.publisher|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Thể loại</div><div class="admin-detail-value">{{ book.genre|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Giá</div><div class="admin-detail-value">{{ book.price|default:"0" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Sale</div><div class="admin-detail-value">{{ book.salePrice|default:"-" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Tồn kho</div><div class="admin-detail-value">{{ book.stock|default:"0" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Đã bán</div><div class="admin-detail-value">{{ book.soldQuantity|default:"0" }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Rating</div><div class="admin-detail-value">{{ book.rating|default:"0" }} ({{ book.ratingCount|default:"0" }} lượt)</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Formats</div><div class="admin-detail-value">{{ book.availableFormats|join:", " }}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Brand</div><div class="admin-detail-value">{% if book.brandName %}{{ book.brandName }}{% elif book.brandId %}{{ book.brandId }}{% else %}-{% endif %}</div></div>
+            <div class="admin-detail-item"><div class="admin-detail-label">Danh mục</div><div class="admin-detail-value">{% if book.categoryNames %}{{ book.categoryNames|join:", " }}{% else %}{{ book.categoryIds|join:", " }}{% endif %}</div></div>
+            <div class="admin-detail-item">
+                <div class="admin-detail-label">Trạng thái</div>
+                <div class="admin-detail-value">
+                    {% if book.isDeleted %}
+                        <span class="admin-badge admin-badge-danger">Đã xóa mềm</span>
+                    {% elif not book.isActive %}
+                        <span class="admin-badge admin-badge-warning">Đã ẩn</span>
+                    {% else %}
+                        <span class="admin-badge admin-badge-success">Đang hiển thị</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 10px;">Mô tả</h2>
+        <p>{{ book.description|linebreaksbr }}</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 10px;">Ảnh</h2>
+        {% if book.coverImage %}
+            <div style="margin-bottom: 16px;">
+                <div class="admin-detail-label">Cover</div>
+                <a href="{{ book.coverImage }}" target="_blank" rel="noopener">
+                    <img class="admin-image-large" src="{{ book.coverImage }}" alt="">
+                </a>
+            </div>
+        {% endif %}
+
+        {% if book.images %}
+            <div class="admin-detail-label">Images</div>
+            <div class="admin-image-grid">
+                {% for image in book.images %}
+                    <a href="{{ image }}" target="_blank" rel="noopener"><img src="{{ image }}" alt=""></a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="admin-empty">Chưa có ảnh bổ sung.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="admin-actions" style="justify-content: flex-start;">
+    <form method="post" action="{% url 'admin_book_toggle_active' book.id %}">
+        {% csrf_token %}
+        <button class="admin-btn admin-btn-secondary" type="submit">{% if book.isActive %}Ẩn sách{% else %}Hiện sách{% endif %}</button>
+    </form>
+    {% if book.isDeleted %}
+    <form method="post" action="{% url 'admin_book_restore' book.id %}">
+        {% csrf_token %}
+        <button class="admin-btn" type="submit">Khôi phục</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'admin_book_soft_delete' book.id %}">
+        {% csrf_token %}
+        <button class="admin-btn admin-btn-secondary" type="submit">Xóa mềm</button>
+    </form>
+    {% endif %}
+</div>
+{% else %}
+<div class="admin-card"><div class="admin-empty">Không tìm thấy sách.</div></div>
+{% endif %}
+{% endblock %}

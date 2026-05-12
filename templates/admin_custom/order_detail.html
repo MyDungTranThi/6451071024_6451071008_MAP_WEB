@@ -1,0 +1,116 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">{% if order.orderCodeDisplay %}{{ order.orderCodeDisplay }}{% else %}Đơn hàng{% endif %}</h1>
+        <p class="admin-page-subtitle">{{ order.createdAtDisplay|default:order.id }}</p>
+    </div>
+    <div class="admin-actions">
+        <a class="admin-btn admin-btn-secondary" href="{% url 'admin_order_list' %}">
+            <span class="material-symbols-outlined md-18">arrow_back</span>
+            Danh sách
+        </a>
+    </div>
+</div>
+
+{% if error_message %}<p class="errornote">{{ error_message }}</p>{% endif %}
+
+{% if order %}
+<div class="admin-grid">
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 14px;">Khách hàng & nhận hàng</h2>
+            <div class="admin-detail-list">
+                <div class="admin-detail-item">
+                    <div class="admin-detail-label">Khách hàng</div>
+                    <div class="admin-detail-value">
+                        {% if order.userId %}
+                            <a class="admin-link" href="{% url 'admin_customer_detail' order.userId %}">{{ order.customerNameDisplay }}</a>
+                        {% else %}
+                            {{ order.customerNameDisplay }}
+                        {% endif %}
+                        {% if order.customerContactDisplay %}<br><span class="admin-muted">{{ order.customerContactDisplay }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Người nhận</div><div class="admin-detail-value">{{ order.recipientName|default:"-" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">SĐT</div><div class="admin-detail-value">{{ order.phoneNumber|default:"-" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Địa chỉ</div><div class="admin-detail-value">{{ order.address|default:"-" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Ghi chú</div><div class="admin-detail-value">{{ order.note|default:"-" }}</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="admin-card-body">
+            <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 14px;">Thanh toán</h2>
+            <div class="admin-detail-list">
+                <div class="admin-detail-item"><div class="admin-detail-label">Subtotal</div><div class="admin-detail-value">{{ order.subtotal|default:"0" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Shipping</div><div class="admin-detail-value">{{ order.shippingFee|default:"0" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Discount</div><div class="admin-detail-value">{{ order.discountAmount|default:"0" }} {% if order.couponCode %}({{ order.couponCode }}){% endif %}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Total</div><div class="admin-detail-value">{{ order.totalDisplay }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Số sản phẩm</div><div class="admin-detail-value">{{ order.totalItems|default:"0" }}</div></div>
+                <div class="admin-detail-item"><div class="admin-detail-label">Phương thức</div><div class="admin-detail-value">{{ order.paymentMethod|default:"COD" }}</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 12px;">Cập nhật trạng thái</h2>
+        <form method="post" action="{% url 'admin_order_update_status' order.id %}" class="admin-form">
+            {% csrf_token %}
+            {% for field in status_form.visible_fields %}
+                <div class="form-row field-{{ field.name }}">
+                    {{ field.errors }}
+                    {{ field.label_tag }}
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <button type="submit" class="admin-btn">
+                <span class="material-symbols-outlined md-18">save</span>
+                Cập nhật trạng thái
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <h2 class="admin-page-title" style="font-size: 18px; margin-bottom: 12px;">Sản phẩm</h2>
+        {% if order.items %}
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>Sách</th><th>Format</th><th>SL</th><th>Đơn giá</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>
+                            {% if item.bookCoverDisplay %}
+                                <img class="admin-image-thumb" src="{{ item.bookCoverDisplay }}" alt="" style="float:left; margin-right:10px;">
+                            {% endif %}
+                            {% if item.bookId %}
+                                <a class="admin-link" href="{% url 'admin_book_detail' item.bookId %}">{{ item.bookTitleDisplay }}</a>
+                            {% else %}
+                                {{ item.bookTitleDisplay }}
+                            {% endif %}
+                        </td>
+                        <td>{% if item.formatLabel %}{{ item.formatLabel }}{% elif item.format %}{{ item.format }}{% else %}-{% endif %}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unitPrice }}</td>
+                        <td>{{ item.subtotal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="admin-empty">Không có sản phẩm.</div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="admin-card"><div class="admin-empty">Không tìm thấy đơn hàng.</div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "admin_custom/base.html" %}
+
+{% block admin_custom_content %}
+<div class="admin-page-header">
+    <div>
+        <h1 class="admin-page-title">{{ title }}</h1>
+        <p class="admin-page-subtitle">Chọn khách hàng và đơn hàng liên quan thay vì nhập ID thủ công.</p>
+    </div>
+    <div class="admin-actions">
+        <a class="admin-btn admin-btn-secondary" href="{{ back_url }}">
+            <span class="material-symbols-outlined md-18">arrow_back</span>
+            Quay lại
+        </a>
+    </div>
+</div>
+
+{% if option_error %}
+    <p class="errornote">{{ option_error }}</p>
+{% endif %}
+
+<div class="admin-card">
+    <div class="admin-card-body">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="form-row field-userId">
+                {{ form.userId.errors }}
+                {{ form.userId.label_tag }}
+                {{ form.userId }}
+                <div class="help">Hiển thị theo tên, email hoặc số điện thoại của user.</div>
+            </div>
+
+            <div class="form-row field-orderId">
+                {{ form.orderId.errors }}
+                {{ form.orderId.label_tag }}
+                {{ form.orderId }}
+                <div class="help">Danh sách này tự lọc theo khách hàng đã chọn.</div>
+            </div>
+
+            <div class="form-row field-orderStatus">
+                {{ form.orderStatus.errors }}
+                {{ form.orderStatus.label_tag }}
+                {{ form.orderStatus }}
+                <div class="help">Khi chọn đơn hàng, trạng thái sẽ tự lấy theo đơn đó. Có thể để trống nếu notification không gắn đơn.</div>
+            </div>
+
+            <div class="form-row field-message">
+                {{ form.message.errors }}
+                {{ form.message.label_tag }}
+                {{ form.message }}
+            </div>
+
+            <div class="form-row field-isRead">
+                {{ form.isRead.errors }}
+                {{ form.isRead.label_tag }}
+                {{ form.isRead }}
+            </div>
+
+            <div class="admin-actions" style="justify-content: flex-start; margin-top: 18px;">
+                <button type="submit" class="admin-btn">
+                    <span class="material-symbols-outlined md-18">save</span>
+                    Lưu
+                </button>
+                <a class="admin-btn admin-btn-secondary" href="{{ back_url }}">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{ orders|json_script:"notification-orders" }}
+<script>
+    const orders = JSON.parse(document.getElementById("notification-orders").textContent);
+    const userSelect = document.querySelector('[name="userId"]');
+    const orderSelect = document.querySelector('[name="orderId"]');
+    const statusSelect = document.querySelector('[name="orderStatus"]');
+    const initialOrderId = orderSelect ? orderSelect.value : "";
+
+    function makeOption(value, text) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = text;
+        return option;
+    }
+
+    function refreshOrders() {
+        if (!userSelect || !orderSelect) return;
+        const userId = userSelect.value;
+        const selectedBefore = orderSelect.value || initialOrderId;
+        orderSelect.textContent = "";
+        orderSelect.appendChild(makeOption("", "Không gắn đơn hàng"));
+
+        orders
+            .filter((order) => order.userId === userId)
+            .forEach((order) => {
+                const option = makeOption(order.id, order.label);
+                option.dataset.status = order.status || "";
+                orderSelect.appendChild(option);
+            });
+
+        if ([...orderSelect.options].some((option) => option.value === selectedBefore)) {
+            orderSelect.value = selectedBefore;
+        }
+        syncOrderStatus();
+    }
+
+    function syncOrderStatus() {
+        if (!orderSelect || !statusSelect) return;
+        const selected = orderSelect.selectedOptions[0];
+        const status = selected ? selected.dataset.status : "";
+        if (status) {
+            statusSelect.value = status;
+        }
+    }
+
+    if (userSelect && orderSelect) {
+        userSelect.addEventListener("change", refreshOrders);
+        orderSelect.addEventListener("change", syncOrderStatus);
+        refreshOrders();
+    }
+</script>
+{% endblock %}
